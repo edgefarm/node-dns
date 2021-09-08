@@ -1,27 +1,27 @@
-NAME = edgefarm
-BIN_DIR ?= ../bin
+NAME = node-dns
+BIN_DIR ?= bin
 VERSION ?= $(shell git describe --match=NeVeRmAtCh --always --abbrev=40 --dirty)
-GO_LDFLAGS = -tags 'netgo osusergo static_build' -ldflags "-X github.com/edgefarm/edgefarm-cli/cli/cmd.version=$(VERSION)"
-GO_ARCH = amd64
+GO_LDFLAGS = -tags 'netgo osusergo static_build' -ldflags "-X github.com/siredmar/node-dns/cmd/node-dns/cmd.version=$(VERSION)"
 
-all: check test build
+all: test build
 
-check:
-ifneq ($(shell ls openapi_dlm openapi_alm >/dev/null 2>&1; echo $$?), 0)
-		@echo "generated openapi directories not found. Run 'make api'"; exit 1
-endif
+build: amd64 arm64
 
-api:
-	cd ../ && ./dobi.sh generate-client-sources
+amd64:
+	GOOS=linux GOARCH=amd64 go build $(GO_LDFLAGS) -o ${BIN_DIR}/${NAME}-amd64 cmd/node-dns/main.go
 
-build:
-	GOOS=linux GOARCH=${GO_ARCH} go build $(GO_LDFLAGS) -o ${BIN_DIR}/${NAME} main.go
-	GOOS=windows GOARCH=${GO_ARCH} go build $(GO_LDFLAGS) -o ${BIN_DIR}/${NAME}.exe main.go
+arm64:	
+	GOOS=linux GOARCH=arm64 go build $(GO_LDFLAGS) -o ${BIN_DIR}/${NAME}-arm64 cmd/node-dns/main.go
 
 test:
 	go test ./...
 
-clean:
-	rm -rf ${BIN_DIR}/${NAME} ${BIN_DIR}/${NAME}.exe openapi_dlm openapi_alm
+clean: clean-amd64 clean-arm64
 
-.PHONY: check test clean
+clean-amd64:
+	rm -rf ${BIN_DIR}/${NAME}-amd64 
+
+clean-arm64:
+	rm -rf ${BIN_DIR}/${NAME}-arm64 
+	
+.PHONY: test clean clean-amd64 clean-arm64 build amd64 arm64
