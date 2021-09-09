@@ -28,14 +28,7 @@ import (
 )
 
 const (
-	// PodsAPI = "/api/v1/pods"
-	// URI     = "127.0.0.1:10550"
 	PodsAPI = "/api/v1/pods"
-	URI     = "https://78.47.195.120:6443"
-)
-
-var (
-	token = "kubeconfig-user-pzkfzl6kds:hsbtscpzccp8m655k8wbf64847fbgftdkm86zdw4frj9xtbgt442qn"
 )
 
 type K8sApi struct {
@@ -101,25 +94,21 @@ func (K8s *K8sApi) getPodIPs(podlist *corev1.PodList) (map[string]string, error)
 func (k8s *K8sApi) getPods() (*corev1.PodList, error) {
 
 	// Create a new request using http
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", URI, PodsAPI), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", k8s.URI, PodsAPI), nil)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(k8s.Token) > 0 {
 		// Create a Bearer string by appending string access token
-		var bearer = "Bearer " + token
+		var bearer = "Bearer " + k8s.Token
 		// add authorization header to the req
 		req.Header.Add("Authorization", bearer)
 	}
 
-	tr := &http.Transport{}
-
-	if k8s.InsecureTLS {
-		// Send req using http Client
-		tr = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+	// Send req using http Client
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: k8s.InsecureTLS},
 	}
 
 	client := &http.Client{Transport: tr}
