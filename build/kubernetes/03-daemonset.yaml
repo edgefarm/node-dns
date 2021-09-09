@@ -19,7 +19,7 @@ spec:
         - name: node-dns
           securityContext:
             privileged: true
-          image: harbor.ci4rail.com/edgefarm-dev/node-dns:eda68e76
+          image: ci4rail/node-dns:eda68e76
           args:
             - "--config"
             - "/config/edge-dns.yaml"
