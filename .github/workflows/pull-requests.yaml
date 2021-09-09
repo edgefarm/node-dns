@@ -1,4 +1,4 @@
-name: release
+name: pull-requests
 on:
   pull_request:
     branches:
@@ -6,10 +6,10 @@ on:
 
 env:
   ARCHITECTURES: linux/arm64,linux/amd64
-  DOCKER_REPOSITORY: edgefarm
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
+  DOCKER_REGISTRY: harbor.ci4rail.com
+  DOCKER_REPOSITORY: edgefarm-dev
+  DOCKER_USERNAME: ${{ secrets.HARBOR_EDGEFARM_DEV_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.HARBOR_EDGEFARM_DEV_PASSWORD }}
   NAME: node-dns
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Log into Docker
-        run: echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+        run: echo ${DOCKER_PASSWORD} | docker login ${DOCKER_REGISTRY} -u ${DOCKER_USERNAME} --password-stdin
       - name: Set up QEMU
         id: qemu
         uses: docker/setup-qemu-action@v1
@@ -33,11 +33,13 @@ jobs:
           version: v0.6.0
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: Add SHORT_SHA env property with commit short sha
+        run: echo "SHORT_SHA=`echo ${{ github.event.pull_request.head.sha }} | cut -c1-8`" >> $GITHUB_ENV
       - name: Build
         run: |
           docker buildx build \
                       -f build/Dockerfile \
                       --push \
                       --platform ${ARCHITECTURES} \
-                      --tag ${DOCKER_REPOSITORY}/${NAME}:latest \
-                      --tag ${DOCKER_REPOSITORY}/${NAME}:${GITHUB_SHA::8} .
+                      --tag ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}/${NAME}:latest \
+                      --tag ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}/${NAME}:${SHORT_SHA} .
