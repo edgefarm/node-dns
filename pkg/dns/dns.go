@@ -65,7 +65,10 @@ func (dns *EdgeDNS) Run() {
 			klog.Errorf("failed to update dns server, err: %v", err)
 		}
 		DnsMap = dns.Feed.GetDnsMap()
-		fmt.Printf("%+v\n", DnsMap)
+		klog.Infof("Currently resolvable:")
+		for host, ip := range DnsMap {
+			klog.Infof("  %s -> %s", host, ip)
+		}
 		ticker := time.NewTicker(time.Minute)
 		for {
 			select {
@@ -111,7 +114,7 @@ func getIPForUri(URI string) (string, error) {
 func lookup(URI string) (ip net.IP, exist bool) {
 	ipAddress, err := getIPForUri(URI)
 	if err != nil {
-		klog.Errorf("%v", err)
+		klog.Warningf("%v", err)
 		return nil, false
 	}
 	klog.Infof("dns server parse %s ip %s", URI, ipAddress)

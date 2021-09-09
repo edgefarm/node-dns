@@ -69,14 +69,14 @@ func (k8s *K8sApi) Update() error {
 	if err != nil {
 		return err
 	}
+
+	for k := range k8s.Feed.FeedDnsMap {
+		delete(k8s.Feed.FeedDnsMap, k)
+	}
 	for host, ip := range podIPs {
-		if _, ok := k8s.Feed.FeedDnsMap[host]; ok {
-			if k8s.Feed.FeedDnsMap[host] != ip {
-				klog.Infof("Updating host %s to IP %s", host, ip)
-			}
-		}
 		k8s.Feed.FeedDnsMap[host] = ip
 	}
+
 	return nil
 }
 

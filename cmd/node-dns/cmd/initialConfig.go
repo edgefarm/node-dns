@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 
 	"github.com/siredmar/node-dns/pkg/dns/config"
@@ -28,14 +29,10 @@ import (
 // initialConfigCmd represents the initialConfig command
 var initialConfigCmd = &cobra.Command{
 	Use:   "initialConfig",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Writes a basic initial configuration",
+	Long:  "Writes a basic initial configuration",
 	Run: func(cmd *cobra.Command, args []string) {
+		viper.SetConfigType("yaml")
 		defaultConfig := config.NewDnsConfig()
 		out, err := yaml.Marshal(defaultConfig)
 		if err != nil {
@@ -45,10 +42,11 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = viper.WriteConfig()
+		err = viper.SafeWriteConfig()
 		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println("Written inital config")
 	},
 }
 

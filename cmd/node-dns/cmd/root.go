@@ -34,13 +34,13 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "node-dns",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "node-dns is a simple dns server for a k8s node.",
+	Long: `node-dns is a simple dns server for a k8s node. 
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+If your POD is annotated with 'node-dns.host: <pod>', it
+can be resolved using this server. node-dns patches the
+'/etc/resolv.conf' to make it available to, e.g. docker 
+containers running on the host.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
