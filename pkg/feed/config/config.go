@@ -25,7 +25,7 @@ type K8sApiConfig struct {
 	// default: false
 	Enabled bool `json:"enabled"`
 	// URI is where the api server is reacheble. Format: 'host:port', optional with 'http://' or 'https://'
-	// default: 127.0.0.1:10550
+	// default: http://127.0.0.1:10550
 	URI string `json:"URI"`
 	// InsecureTLS indicates if there is any TLS certificate used that is self signed (optional)
 	// default: true
@@ -39,7 +39,7 @@ func NewFeedConfig() *FeedConfig {
 	return &FeedConfig{
 		K8sapi: K8sApiConfig{
 			Enabled:     true,
-			URI:         "127.0.0.1:10550",
+			URI:         "http://127.0.0.1:10550",
 			InsecureTLS: true,
 			Token:       "",
 		},
