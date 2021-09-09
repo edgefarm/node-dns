@@ -88,7 +88,7 @@ func (k8s *K8sApi) GetDnsMap() map[string]string {
 func (K8s *K8sApi) getPodIPs(podlist *corev1.PodList) (map[string]string, error) {
 	podIPs := map[string]string{}
 	for _, pod := range podlist.Items {
-		if podName, ok := pod.Annotations["node-dns.host"]; ok {
+		if podName, ok := pod.Labels["node-dns.host"]; ok {
 			for _, container := range pod.Spec.Containers {
 				podIPs[fmt.Sprintf("%s.%s", container.Name, podName)] = pod.Status.PodIP
 			}
