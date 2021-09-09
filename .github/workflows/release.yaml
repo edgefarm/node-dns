@@ -1,9 +1,8 @@
 name: release
 on:
-  pull_request:
+  push:
     branches:
       - main
-
 env:
   ARCHITECTURES: linux/arm64,linux/amd64
   DOCKER_REPOSITORY: edgefarm
