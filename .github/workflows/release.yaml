@@ -5,7 +5,7 @@ on:
       - main
 env:
   ARCHITECTURES: linux/arm64,linux/amd64
-  DOCKER_REPOSITORY: edgefarm
+  DOCKER_REPOSITORY: ci4rail
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
