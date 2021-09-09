@@ -17,13 +17,17 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 
 	"github.com/siredmar/node-dns/pkg/dns/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
+	"k8s.io/klog"
+)
+
+var (
+	outFile string
 )
 
 // initialConfigCmd represents the initialConfig command
@@ -42,24 +46,27 @@ var initialConfigCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = viper.SafeWriteConfig()
+		err = writeInitialConfig()
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("Written inital config")
+		klog.Infof("Written inital config to %s", viper.ConfigFileUsed())
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(initialConfigCmd)
 
-	// Here you will define your flags and configuration settings.
+	rootCmd.PersistentFlags().StringVar(&outFile, "out", "", "output file")
+}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// initialConfigCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// initialConfigCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func writeInitialConfig() error {
+	if outFile != "" {
+		viper.SetConfigFile(outFile)
+	}
+	err := viper.WriteConfig()
+	if err != nil {
+		return err
+	}
+	return nil
 }

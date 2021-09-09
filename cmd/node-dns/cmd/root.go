@@ -53,10 +53,10 @@ containers running on the host.`,
 		config.Feed.K8sapi.URI = viper.GetString("feed.k8sapi.uri")
 		dns, err := dns.NewEdgeDNS(config)
 		if err != nil {
-			klog.Errorf("error creating DNS: %v", err)
+			klog.Errorf("Error creating DNS: %v", err)
 			os.Exit(1)
 		}
-		klog.Infof("started DNS server")
+		klog.Infof("Starting DNS server")
 		dns.Run()
 	},
 }
@@ -106,7 +106,8 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		klog.Errorf("Failed reading config file: %s", err)
+		os.Exit(1)
 	}
 }

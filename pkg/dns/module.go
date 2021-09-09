@@ -45,7 +45,7 @@ func NewEdgeDNS(config *config.DnsConfig) (dns *EdgeDNS, err error) {
 	// get dns listen ip
 	dns.ListenIP, err = getInterfaceIP(config.ListenInterface)
 	if err != nil {
-		return dns, fmt.Errorf("get dns listen ip err: %v", err)
+		return dns, fmt.Errorf("get dns listen ip for interface %s err: %v", config.ListenInterface, err)
 	}
 
 	addr := fmt.Sprintf("%v:%v", dns.ListenIP, config.ListenPort)

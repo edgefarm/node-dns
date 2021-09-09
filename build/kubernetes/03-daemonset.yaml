@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-dns
+  namespace: node-dns
+  labels:
+    k8s-app: edge-dns
+spec:
+  selector:
+    matchLabels:
+      k8s-app: edge-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: edge-dns
+    spec:
+      hostNetwork: true
+      containers:
+        - name: node-dns
+          securityContext:
+            privileged: true
+          image: siredmar/node-dns:latest
+          args:
+            - "--config"
+            - "/config.yaml"
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          volumeMounts:
+            - name: conf
+              mountPath: /config.yaml
+            - name: resolv
+              mountPath: /etc/resolv.conf
+      restartPolicy: Always
+      volumes:
+        - name: conf
+          configMap:
+            name: node-dns-cfg
+        - name: resolv
+          hostPath:
+            path: /etc/resolv.conf
+      # only schedule this on kubeedge devices
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/edge
+                    operator: Exists
+                  - key: node-role.kubernetes.io/agent
+                    operator: Exists
+      # optionally enable tolerations
+      tolerations:
+        - key: "edgefarm.applications"
+          operator: "Exists"
+          effect: "NoExecute"

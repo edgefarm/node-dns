@@ -1,0 +1,42 @@
+name: release
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ARCHITECTURES: linux/arm64,linux/amd64
+  DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  NAME: node-dns
+
+jobs:
+  build-node-dns-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Log into Docker
+        run: echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: ${{ env.ARCHITECTURES }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: v0.6.0
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: Build
+        run: |
+          docker buildx build \
+                      -f build/Dockerfile \
+                      --push \
+                      --platform ${ARCHITECTURES} \
+                      --tag ${DOCKER_REPOSITORY}/${NAME}:latest \
+                      --tag ${DOCKER_REPOSITORY}/${NAME}:${GITHUB_SHA::8} .
