@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,14 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package config
 
+// FeedConfig specifies the feed config
 type FeedConfig struct {
 	// K8sapi configures the k8s api feed
-	K8sapi K8sApiConfig
+	K8sapi K8sAPIConfig
 }
 
-type K8sApiConfig struct {
+// K8sAPIConfig specifies the k8s api feed configuration
+type K8sAPIConfig struct {
 	// Enabled indicates if the k8s api feed is used
 	// default: false
 	Enabled bool `json:"enabled"`
@@ -35,9 +38,10 @@ type K8sApiConfig struct {
 	Token string `json:"token"`
 }
 
+// NewFeedConfig returns a default FeedConfig
 func NewFeedConfig() *FeedConfig {
 	return &FeedConfig{
-		K8sapi: K8sApiConfig{
+		K8sapi: K8sAPIConfig{
 			Enabled:     true,
 			URI:         "http://127.0.0.1:10550",
 			InsecureTLS: true,

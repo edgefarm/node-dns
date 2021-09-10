@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package feed
 
 import (
@@ -28,31 +29,32 @@ import (
 )
 
 const (
-	PodsAPI = "/api/v1/pods"
+	podsAPI = "/api/v1/pods"
 )
 
-type K8sApi struct {
+// K8sAPI defines the k8s api feed
+type K8sAPI struct {
 	Feed
 	URI         string
 	Token       string
 	InsecureTLS bool
 }
 
-// NewK8sApi creates a new feed using the k8s API
-func NewK8sApi(config *config.FeedConfig) *K8sApi {
+// NewK8sAPI creates a new feed using the k8s API
+func NewK8sAPI(config *config.FeedConfig) *K8sAPI {
 	klog.Info("Starting local k8s api feed")
-	return &K8sApi{
+	return &K8sAPI{
 		URI:         config.K8sapi.URI,
 		Token:       config.K8sapi.Token,
 		InsecureTLS: config.K8sapi.InsecureTLS,
 		Feed: Feed{
-			FeedDnsMap: make(map[string]string),
+			FeedDNSMap: make(map[string]string),
 		},
 	}
 }
 
 // Update triggers an update of the DNS cache
-func (k8s *K8sApi) Update() error {
+func (k8s *K8sAPI) Update() error {
 	klog.Info("Updating DNS cache")
 	podsRaw, err := k8s.getPods()
 	if err != nil {
@@ -63,22 +65,23 @@ func (k8s *K8sApi) Update() error {
 		return err
 	}
 
-	for k := range k8s.Feed.FeedDnsMap {
-		delete(k8s.Feed.FeedDnsMap, k)
+	for k := range k8s.Feed.FeedDNSMap {
+		delete(k8s.Feed.FeedDNSMap, k)
 	}
 	for host, ip := range podIPs {
-		k8s.Feed.FeedDnsMap[host] = ip
+		k8s.Feed.FeedDNSMap[host] = ip
 	}
 
 	return nil
 }
 
-func (k8s *K8sApi) GetDnsMap() map[string]string {
-	return k8s.Feed.FeedDnsMap
+// GetDNSMap returns the feeds DNS map
+func (k8s *K8sAPI) GetDNSMap() map[string]string {
+	return k8s.Feed.FeedDNSMap
 }
 
 // getPodIPs extracts the IPs from the pods
-func (K8s *K8sApi) getPodIPs(podlist *corev1.PodList) (map[string]string, error) {
+func (k8s *K8sAPI) getPodIPs(podlist *corev1.PodList) (map[string]string, error) {
 	podIPs := map[string]string{}
 	for _, pod := range podlist.Items {
 		if podName, ok := pod.Labels["node-dns.host"]; ok {
@@ -91,10 +94,10 @@ func (K8s *K8sApi) getPodIPs(podlist *corev1.PodList) (map[string]string, error)
 }
 
 // getPods gets all pods from the k8s api
-func (k8s *K8sApi) getPods() (*corev1.PodList, error) {
+func (k8s *K8sAPI) getPods() (*corev1.PodList, error) {
 
 	// Create a new request using http
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", k8s.URI, PodsAPI), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s%s", k8s.URI, podsAPI), nil)
 	if err != nil {
 		return nil, err
 	}

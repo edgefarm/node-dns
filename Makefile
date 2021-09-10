@@ -13,5 +13,5 @@ test:
 
 clean:
 	rm -rf ${BIN_DIR}/${NAME}
-	
+
 .PHONY: test clean build

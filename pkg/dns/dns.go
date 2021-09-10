@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package dns
 
 import (
@@ -28,11 +29,12 @@ import (
 
 const hostResolv = "/etc/resolv.conf"
 
-// DnsMap is a map of hostnames with their corresponding IP addresses
-var DnsMap = map[string]string{}
+// DNSMap is a map of hostnames with their corresponding IP addresses
+var DNSMap = map[string]string{}
 
 type handler struct{}
 
+// ServeDNS handles the DNS requests
 func (h *handler) ServeDNS(w mdns.ResponseWriter, r *mdns.Msg) {
 	msg := mdns.Msg{}
 	msg.SetReply(r)
@@ -56,6 +58,7 @@ func (h *handler) ServeDNS(w mdns.ResponseWriter, r *mdns.Msg) {
 	}
 }
 
+// Run starts the DNS server
 func (dns *EdgeDNS) Run() {
 	// ensure /etc/resolv.conf have dns nameserver
 	go func() {
@@ -64,9 +67,9 @@ func (dns *EdgeDNS) Run() {
 		if err != nil {
 			klog.Errorf("failed to update dns server, err: %v", err)
 		}
-		DnsMap = dns.Feed.GetDnsMap()
+		DNSMap = dns.Feed.GetDNSMap()
 		klog.Infof("Currently resolvable:")
-		for host, ip := range DnsMap {
+		for host, ip := range DNSMap {
 			klog.Infof("  %s -> %s", host, ip)
 		}
 		ticker := time.NewTicker(time.Minute)
@@ -77,8 +80,8 @@ func (dns *EdgeDNS) Run() {
 				if err != nil {
 					klog.Errorf("failed to update dns server, err: %v", err)
 				}
-				DnsMap = dns.Feed.GetDnsMap()
-				fmt.Println(DnsMap)
+				DNSMap = dns.Feed.GetDNSMap()
+				fmt.Println(DNSMap)
 				dns.ensureResolvForHost()
 			case <-dns.Exit:
 				dns.cleanResolvForHost()
@@ -93,6 +96,7 @@ func (dns *EdgeDNS) Run() {
 	}
 }
 
+// Stop stops the DNS server
 func (dns *EdgeDNS) Stop() error {
 	dns.Exit <- true
 	err := dns.Server.Shutdown()
@@ -102,8 +106,9 @@ func (dns *EdgeDNS) Stop() error {
 	return nil
 }
 
-func getIPForUri(URI string) (string, error) {
-	if ip, ok := DnsMap[URI]; ok {
+// getIPForURI returns the IP for an URI
+func getIPForURI(URI string) (string, error) {
+	if ip, ok := DNSMap[URI]; ok {
 		return ip, nil
 
 	}
@@ -112,7 +117,7 @@ func getIPForUri(URI string) (string, error) {
 
 // lookup confirms if the service exists
 func lookup(URI string) (ip net.IP, exist bool) {
-	ipAddress, err := getIPForUri(URI)
+	ipAddress, err := getIPForURI(URI)
 	if err != nil {
 		klog.Warningf("%v", err)
 		return nil, false
@@ -182,6 +187,7 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 	}
 }
 
+// sortNameserver sorts the nameserver list
 func sortNameserver(resolv []string, dnsIdx, startIdx int) string {
 	nameserver := ""
 	idx := 0

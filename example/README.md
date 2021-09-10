@@ -1,19 +1,19 @@
 # Examples
 
-Here you can find some examples to get the idea of the correct placement and usage of `node-dns`. 
+Here you can find some examples to get the idea of the correct placement and usage of `node-dns`.
 
 Per default all examples are scheduled on all nodes which have the following labels set by default. These labels are set by default for KubeEdge nodes.
-* `node-role.kubernetes.io/edge=` 
+* `node-role.kubernetes.io/edge=`
 * `node-role.kubernetes.io/agent=`
 
 Modify tolerations if needed any.
 
 # Notes
 
-:exclamation:  **`deployment.yaml`** and **`pods.yaml`** :exclamation: 
+:exclamation:  **`deployment.yaml`** and **`pods.yaml`** :exclamation:
 
-For the `deployment.yaml` example, you need to modify the value for the label `kubernetes.io/hostname` to match the node you want to schedule this on. 
-For `pods.yaml` example you have to modify the `nodeName` property to whatever node you want to schedule both pods. 
+For the `deployment.yaml` example, you need to modify the value for the label `kubernetes.io/hostname` to match the node you want to schedule this on.
+For `pods.yaml` example you have to modify the `nodeName` property to whatever node you want to schedule both pods.
 This is needed because otherwise the scheduler does not guarantee that the pods are scheduled on the same node. However this is mandatory for `node-dns` to work properly. Otherwise it might or might not work as you'd expect.
 
 To test if it works look at the logs of your curl pod. It might take a little while before the update cycle of the DNS server collects all new information and make the name resolution working.

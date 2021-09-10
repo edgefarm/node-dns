@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package dns
 
 import (
@@ -30,16 +31,16 @@ type EdgeDNS struct {
 	ListenIP net.IP
 	Server   *mdns.Server
 	Exit     chan interface{}
-	Feed     feed.FeedIf
+	Feed     feed.If
 }
 
 // NewEdgeDNS creates a new EdgeDNS instance
-func NewEdgeDNS(config *config.DnsConfig) (dns *EdgeDNS, err error) {
+func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 	dns = &EdgeDNS{
 		ListenIP: []byte{},
 		Server:   &mdns.Server{},
 		Exit:     make(chan interface{}),
-		Feed:     feed.NewK8sApi(config.Feed),
+		Feed:     feed.NewK8sAPI(config.Feed),
 	}
 
 	// get dns listen ip

@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package cmd
 
 import (
@@ -37,7 +38,7 @@ var initialConfigCmd = &cobra.Command{
 	Long:  "Writes a basic initial configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		viper.SetConfigType("yaml")
-		defaultConfig := config.NewDnsConfig()
+		defaultConfig := config.NewDNSConfig()
 		out, err := yaml.Marshal(defaultConfig)
 		if err != nil {
 			log.Fatal(err)

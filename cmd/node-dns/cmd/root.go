@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package cmd
 
 import (
@@ -35,16 +36,16 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "node-dns",
 	Short: "node-dns is a simple dns server for a k8s node.",
-	Long: `node-dns is a simple dns server for a k8s node. 
+	Long: `node-dns is a simple dns server for a k8s node.
 
 If your POD is annotated with 'node-dns.host: <pod>', it
 can be resolved using this server. node-dns patches the
-'/etc/resolv.conf' to make it available to, e.g. docker 
+'/etc/resolv.conf' to make it available to, e.g. docker
 containers running on the host.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		config := config.NewDnsConfig()
+		config := config.NewDNSConfig()
 		config.ListenInterface = viper.GetString("listeninterface")
 		config.ListenPort = viper.GetInt("listenport")
 		config.Feed.K8sapi.Enabled = viper.GetBool("feed.k8sapi.enabled")

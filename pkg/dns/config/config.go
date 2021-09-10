@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Armin Schlegel <armin.schlegel@gmx.de>
+Copyright © 2021 Ci4Rail GmbH <engineering@ci4rail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,13 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package config
 
 import (
 	feed "github.com/siredmar/node-dns/pkg/feed/config"
 )
 
-type DnsConfig struct {
+// DNSConfig contains the configuration for the DNS
+type DNSConfig struct {
 	// ListenInterface defines the interface the edgeDNS listens on
 	// default: docker0
 	ListenInterface string `json:"listenInterface"`
@@ -30,8 +32,9 @@ type DnsConfig struct {
 	Feed *feed.FeedConfig `json:"feed"`
 }
 
-func NewDnsConfig() *DnsConfig {
-	return &DnsConfig{
+// NewDNSConfig gets the default DNS configuration
+func NewDNSConfig() *DNSConfig {
+	return &DNSConfig{
 		ListenInterface: "docker0",
 		ListenPort:      53,
 		Feed:            feed.NewFeedConfig(),
