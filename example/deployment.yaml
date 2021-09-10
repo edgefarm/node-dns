@@ -3,11 +3,11 @@ kind: Deployment
 metadata:
   name: curl-deployment
 spec:
+  replicas: 1
   selector:
     matchLabels:
       k8s-app: curl
   template:
-    replicas: 1
     metadata:
       labels:
         k8s-app: curl
@@ -29,10 +29,10 @@ spec:
                     operator: Exists
                   - key: node-role.kubernetes.io/agent
                     operator: Exists
-                  # - key: kubernetes.io/hostname
-                  #   operator: In
-                  #   values:
-                  #     - <nodeName>
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - <nodeName>
       # optionally add tolerations you need
       # tolerations:
       #   - key: "<key>"
@@ -44,6 +44,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
+  replicas: 1
   selector:
     matchLabels:
       k8s-app: nginx
@@ -53,7 +54,6 @@ spec:
         k8s-app: nginx
         node-dns.host: nginx-deployment
     spec:
-      replicas: 1
       hostname: nginx
       containers:
         - name: nginx
@@ -69,10 +69,10 @@ spec:
                     operator: Exists
                   - key: node-role.kubernetes.io/agent
                     operator: Exists
-                  # - key: kubernetes.io/hostname
-                  #   operator: In
-                  #   values:
-                  #     - <nodeName>
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - <nodeName>
       # optionally add tolerations you need
       # tolerations:
       #   - key: "<key>"

@@ -4,29 +4,29 @@ metadata:
   name: curl-pod
   labels:
     node-dns.host: curl-pod
-  spec:
-    containers:
-      containers:
-        - name: curl
-          command:
-            - sh
-            - -c
-            - while true; do curl nginx.nginx-pod; date; sleep 1; done
-          image: curlimages/curl:7.78.0
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node-role.kubernetes.io/edge
-                    operator: Exists
-                  - key: node-role.kubernetes.io/agent
-                    operator: Exists
-    # optionally add tolerations you need
-    # tolerations:
-    #   - key: "<key>"
-    #     operator: "<operator>"
-    #     effect: "<effect>"
+spec:
+  nodeName: <nodeName>
+  containers:
+    - name: curl
+      command:
+        - sh
+        - -c
+        - while true; do curl nginx.nginx-pod; date; sleep 1; done
+      image: curlimages/curl:7.78.0
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/edge
+                operator: Exists
+              - key: node-role.kubernetes.io/agent
+                operator: Exists
+  # optionally add tolerations you need
+  # tolerations:
+  #   - key: "<key>"
+  #     operator: "<operator>"
+  #     effect: "<effect>"
 ---
 apiVersion: v1
 kind: Pod
@@ -34,23 +34,24 @@ metadata:
   name: nginx-pod
   labels:
     node-dns.host: nginx-pod
-  spec:
-    containers:
-      - name: nginx
-        image: nginx
-        ports:
-          - containerPort: 80
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: node-role.kubernetes.io/edge
-                  operator: Exists
-                - key: node-role.kubernetes.io/agent
-                  operator: Exists
-    # optionally add tolerations you need
-    # tolerations:
-    #   - key: "<key>"
-    #     operator: "<operator>"
-    #     effect: "<effect>"
+spec:
+  nodeName: <nodeName>
+  containers:
+    - name: nginx
+      image: nginx
+      ports:
+        - containerPort: 80
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/edge
+                operator: Exists
+              - key: node-role.kubernetes.io/agent
+                operator: Exists
+  # optionally add tolerations you need
+  # tolerations:
+  #   - key: "<key>"
+  #     operator: "<operator>"
+  #     effect: "<effect>"
