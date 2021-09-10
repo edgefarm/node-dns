@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: curl-daemonset
+spec:
+  selector:
+    matchLabels:
+      k8s-app: curl
+  template:
+    metadata:
+      labels:
+        k8s-app: curl
+        node-dns.host: curl-daemonset
+    spec:
+      containers:
+        - name: curl
+          command:
+            - sh
+            - -c
+            - while true; do curl nginx.nginx-daemonset; date; sleep 1; done
+          image: curlimages/curl:7.78.0
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/edge
+                    operator: Exists
+                  - key: node-role.kubernetes.io/agent
+                    operator: Exists
+      # optionally add tolerations you need
+      # tolerations:
+      #   - key: "<key>"
+      #     operator: "<operator>"
+      #     effect: "<effect>"
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset
+spec:
+  selector:
+    matchLabels:
+      k8s-app: nginx
+  template:
+    metadata:
+      labels:
+        k8s-app: nginx
+        node-dns.host: nginx-daemonset
+    spec:
+      hostname: nginx
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/edge
+                    operator: Exists
+                  - key: node-role.kubernetes.io/agent
+                    operator: Exists
+      # optionally add tolerations you need
+      # tolerations:
+      #   - key: "<key>"
+      #     operator: "<operator>"
+      #     effect: "<effect>"

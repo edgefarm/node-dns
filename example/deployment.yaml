@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl-deployment
+spec:
+  selector:
+    matchLabels:
+      k8s-app: curl
+  template:
+    replicas: 1
+    metadata:
+      labels:
+        k8s-app: curl
+        node-dns.host: curl-deployment
+    spec:
+      containers:
+        - name: curl
+          command:
+            - sh
+            - -c
+            - while true; do curl nginx.nginx-deployment; date; sleep 1; done
+          image: curlimages/curl:7.78.0
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/edge
+                    operator: Exists
+                  - key: node-role.kubernetes.io/agent
+                    operator: Exists
+                  # - key: kubernetes.io/hostname
+                  #   operator: In
+                  #   values:
+                  #     - <nodeName>
+      # optionally add tolerations you need
+      # tolerations:
+      #   - key: "<key>"
+      #     operator: "<operator>"
+      #     effect: "<effect>"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      k8s-app: nginx
+  template:
+    metadata:
+      labels:
+        k8s-app: nginx
+        node-dns.host: nginx-deployment
+    spec:
+      replicas: 1
+      hostname: nginx
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/edge
+                    operator: Exists
+                  - key: node-role.kubernetes.io/agent
+                    operator: Exists
+                  # - key: kubernetes.io/hostname
+                  #   operator: In
+                  #   values:
+                  #     - <nodeName>
+      # optionally add tolerations you need
+      # tolerations:
+      #   - key: "<key>"
+      #     operator: "<operator>"
+      #     effect: "<effect>"
