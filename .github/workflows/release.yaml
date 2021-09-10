@@ -3,6 +3,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/**"
+      - "Makefile"
+      - "cmd/**"
+      - "pkg/**"
+      - "build/Dockerfile"
+      - "!README.md"
+      - "!build/kubernetes/**"
 env:
   ARCHITECTURES: linux/arm64,linux/amd64
   DOCKER_REPOSITORY: ci4rail
