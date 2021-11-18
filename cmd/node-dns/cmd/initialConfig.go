@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/siredmar/node-dns/pkg/dns/config"
+	"github.com/edgefarm/node-dns/pkg/dns/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"

@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/edgefarm/node-dns/pkg/dns/config"
 	mdns "github.com/miekg/dns"
-	"github.com/siredmar/node-dns/pkg/dns/config"
 
-	"github.com/siredmar/node-dns/pkg/feed"
+	"github.com/edgefarm/node-dns/pkg/feed"
 )
 
 // EdgeDNS is a node-level dns resolver

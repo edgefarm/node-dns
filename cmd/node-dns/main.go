@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/siredmar/node-dns/cmd/node-dns/cmd"
+	"github.com/edgefarm/node-dns/cmd/node-dns/cmd"
 )
 
 func main() {
