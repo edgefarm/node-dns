@@ -9,7 +9,7 @@ env:
   DOCKER_REPOSITORY: ci4rail
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  NAME: node-dns
+  NAME: dev-node-dns
 
 jobs:
   build-node-dns-docker-image:
@@ -40,5 +40,5 @@ jobs:
                       -f build/Dockerfile \
                       --push \
                       --platform ${ARCHITECTURES} \
-                      --tag ${DOCKER_REPOSITORY}/dev-${NAME}:latest \
-                      --tag ${DOCKER_REPOSITORY}/dev-${NAME}:${SHORT_SHA} .
+                      --tag ${DOCKER_REPOSITORY}/${NAME}:latest \
+                      --tag ${DOCKER_REPOSITORY}/${NAME}:${SHORT_SHA} .
