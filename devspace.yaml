@@ -2,6 +2,7 @@ version: v1beta11
 
 deployments:
   - name: node-dns
+    namespace: node-dns
     kubectl:
       manifests:
         - build/kubernetes/
