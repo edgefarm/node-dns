@@ -1,3 +1,5 @@
+[![release](https://github.com/edgefarm/node-dns/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/edgefarm/node-dns/actions/workflows/release.yaml)
+
 # node-dns
 
 `node-dns` is a simple local DNS server that can be deployed via kubernetes. It is specially built for using with [KubeEdge](github.com/kubeedge/kubeedge) nodes.
