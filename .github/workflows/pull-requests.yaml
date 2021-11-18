@@ -6,11 +6,10 @@ on:
 
 env:
   ARCHITECTURES: linux/arm64,linux/amd64
-  DOCKER_REGISTRY: harbor.ci4rail.com
-  DOCKER_REPOSITORY: edgefarm-dev
-  DOCKER_USERNAME: ${{ secrets.HARBOR_EDGEFARM_DEV_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.HARBOR_EDGEFARM_DEV_PASSWORD }}
-  NAME: node-dns
+  DOCKER_REPOSITORY: ci4rail
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  NAME: dev-node-dns
 
 jobs:
   build-node-dns-docker-image:
