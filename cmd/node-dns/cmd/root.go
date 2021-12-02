@@ -26,8 +26,8 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
-	dns "github.com/siredmar/node-dns/pkg/dns"
-	"github.com/siredmar/node-dns/pkg/dns/config"
+	dns "github.com/edgefarm/node-dns/pkg/dns"
+	"github.com/edgefarm/node-dns/pkg/dns/config"
 )
 
 var cfgFile string

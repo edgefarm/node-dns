@@ -12,6 +12,7 @@ on:
       - "!README.md"
       - "!build/kubernetes/**"
       - "!examples/**"
+      - "!devspace.yaml"
 env:
   ARCHITECTURES: linux/arm64,linux/amd64
   DOCKER_REPOSITORY: ci4rail

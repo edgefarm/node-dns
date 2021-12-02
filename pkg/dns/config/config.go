@@ -17,7 +17,7 @@ limitations under the License.
 package config
 
 import (
-	feed "github.com/siredmar/node-dns/pkg/feed/config"
+	feed "github.com/edgefarm/node-dns/pkg/feed/config"
 )
 
 // DNSConfig contains the configuration for the DNS

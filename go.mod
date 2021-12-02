@@ -1,4 +1,4 @@
-module github.com/siredmar/node-dns
+module github.com/edgefarm/node-dns
 
 go 1.16
 

@@ -1,7 +1,7 @@
 NAME = node-dns
 BIN_DIR ?= bin
 VERSION ?= $(shell git describe --match=NeVeRmAtCh --always --abbrev=40 --dirty)
-GO_LDFLAGS = -tags 'netgo osusergo static_build' -ldflags "-X github.com/siredmar/node-dns/cmd/node-dns/cmd.version=$(VERSION)"
+GO_LDFLAGS = -tags 'netgo osusergo static_build' -ldflags "-X github.com/edgefarm/node-dns/cmd/node-dns/cmd.version=$(VERSION)"
 
 all: test build
 
