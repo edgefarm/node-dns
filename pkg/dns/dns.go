@@ -17,6 +17,7 @@ limitations under the License.
 package dns
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -28,6 +29,10 @@ import (
 )
 
 const hostResolv = "/etc/resolv.conf"
+
+const (
+	customDNS = "8.8.8.8:53"
+)
 
 // DNSMap is a map of hostnames with their corresponding IP addresses
 var DNSMap = map[string]string{}
@@ -110,9 +115,15 @@ func (dns *EdgeDNS) Stop() error {
 func getIPForURI(URI string) (string, error) {
 	if ip, ok := DNSMap[URI]; ok {
 		return ip, nil
-
 	}
-	return "", fmt.Errorf("no ip found for %s", URI)
+	ips, err := lookupUpstreamHost(context.Background(), URI)
+	if err != nil {
+		return "", err
+	}
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no IP found for %s", URI)
+	}
+	return ips[0], nil
 }
 
 // lookup confirms if the service exists
@@ -227,4 +238,17 @@ func (dns *EdgeDNS) cleanResolvForHost() {
 	if err := ioutil.WriteFile(hostResolv, []byte(nameserver), 0600); err != nil {
 		klog.Errorf("failed to write nameserver to file %s, err: %v", hostResolv, err)
 	}
+}
+
+func lookupUpstreamHost(ctx context.Context, URI string) ([]string, error) {
+	r := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{
+				Timeout: time.Millisecond * time.Duration(10000),
+			}
+			return d.DialContext(ctx, network, customDNS)
+		},
+	}
+	return r.LookupHost(context.Background(), URI)
 }
