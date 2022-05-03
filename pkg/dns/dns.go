@@ -62,17 +62,19 @@ func (h *handler) ServeDNS(w mdns.ResponseWriter, r *mdns.Msg) {
 func (dns *EdgeDNS) Run() {
 	// ensure /etc/resolv.conf have dns nameserver
 	go func() {
-		dns.ensureResolvForHost()
-		err := dns.Feed.Update()
-		if err != nil {
-			klog.Errorf("failed to update dns server, err: %v", err)
+		if dns.UpdateResolvConf {
+			dns.ensureResolvForHost()
+			err := dns.Feed.Update()
+			if err != nil {
+				klog.Errorf("failed to update dns server, err: %v", err)
+			}
 		}
 		DNSMap = dns.Feed.GetDNSMap()
 		klog.Infof("Currently resolvable:")
 		for host, ip := range DNSMap {
 			klog.Infof("  %s -> %s", host, ip)
 		}
-		ticker := time.NewTicker(time.Minute)
+		ticker := time.NewTicker(time.Second * 30)
 		for {
 			select {
 			case <-ticker.C:
@@ -81,15 +83,18 @@ func (dns *EdgeDNS) Run() {
 					klog.Errorf("failed to update dns server, err: %v", err)
 				}
 				DNSMap = dns.Feed.GetDNSMap()
-				fmt.Println(DNSMap)
-				dns.ensureResolvForHost()
+				if dns.UpdateResolvConf {
+					fmt.Println(DNSMap)
+					dns.ensureResolvForHost()
+				}
 			case <-dns.Exit:
-				dns.cleanResolvForHost()
+				if dns.UpdateResolvConf {
+					dns.cleanResolvForHost()
+				}
 				return
 			}
 		}
 	}()
-
 	dns.Server.Handler = &handler{}
 	if err := dns.Server.ListenAndServe(); err != nil {
 		klog.Errorf("dns server serve error: %v", err)

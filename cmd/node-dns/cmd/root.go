@@ -48,6 +48,7 @@ containers running on the host.`,
 		config := config.NewDNSConfig()
 		config.ListenInterface = viper.GetString("listeninterface")
 		config.ListenPort = viper.GetInt("listenport")
+		config.UpdateResolvConf = viper.GetBool("false")
 		config.Feed.K8sapi.Enabled = viper.GetBool("feed.k8sapi.enabled")
 		config.Feed.K8sapi.InsecureTLS = viper.GetBool("feed.k8sapi.insecuretls")
 		config.Feed.K8sapi.Token = viper.GetString("feed.k8sapi.token")

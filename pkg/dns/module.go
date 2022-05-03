@@ -28,19 +28,21 @@ import (
 
 // EdgeDNS is a node-level dns resolver
 type EdgeDNS struct {
-	ListenIP net.IP
-	Server   *mdns.Server
-	Exit     chan interface{}
-	Feed     feed.If
+	ListenIP         net.IP
+	Server           *mdns.Server
+	Exit             chan interface{}
+	Feed             feed.If
+	UpdateResolvConf bool
 }
 
 // NewEdgeDNS creates a new EdgeDNS instance
 func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 	dns = &EdgeDNS{
-		ListenIP: []byte{},
-		Server:   &mdns.Server{},
-		Exit:     make(chan interface{}),
-		Feed:     feed.NewK8sAPI(config.Feed),
+		ListenIP:         []byte{},
+		Server:           &mdns.Server{},
+		Exit:             make(chan interface{}),
+		Feed:             feed.NewK8sAPI(config.Feed),
+		UpdateResolvConf: config.UpdateResolvConf,
 	}
 
 	// get dns listen ip
