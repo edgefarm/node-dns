@@ -28,6 +28,8 @@ type DNSConfig struct {
 	//  ListenPort defines the DNS port
 	// default: 53
 	ListenPort int `json:"listenPort"`
+	// UpdateResolvConf defines whether the /etc/resolv.conf should be updated
+	UpdateResolvConf bool `json:"updateResolvConf"`
 	// Feed defines the feeds the DNS server gets its information from
 	Feed *feed.FeedConfig `json:"feed"`
 }
@@ -35,8 +37,9 @@ type DNSConfig struct {
 // NewDNSConfig gets the default DNS configuration
 func NewDNSConfig() *DNSConfig {
 	return &DNSConfig{
-		ListenInterface: "docker0",
-		ListenPort:      53,
-		Feed:            feed.NewFeedConfig(),
+		ListenInterface:  "docker0",
+		ListenPort:       53,
+		Feed:             feed.NewFeedConfig(),
+		UpdateResolvConf: false,
 	}
 }
