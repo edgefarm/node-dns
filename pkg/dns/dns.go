@@ -69,10 +69,10 @@ func (dns *EdgeDNS) Run() {
 	go func() {
 		if dns.UpdateResolvConf {
 			dns.ensureResolvForHost()
-			err := dns.Feed.Update()
-			if err != nil {
-				klog.Errorf("failed to update dns server, err: %v", err)
-			}
+		}
+		err := dns.Feed.Update()
+		if err != nil {
+			klog.Errorf("failed to update dns server, err: %v", err)
 		}
 		DNSMap = dns.Feed.GetDNSMap()
 		klog.Infof("Currently resolvable:")
