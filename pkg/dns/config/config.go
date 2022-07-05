@@ -33,7 +33,7 @@ type DNSConfig struct {
 	// Feed defines the feeds the DNS server gets its information from
 	Feed *feed.FeedConfig `json:"feed"`
 	// ResolvConf is the path to the resolv.conf file
-	ResolvConf string
+	ResolvConf string `json:"resolvConf"`
 }
 
 // NewDNSConfig gets the default DNS configuration
