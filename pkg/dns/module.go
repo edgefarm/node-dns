@@ -22,6 +22,7 @@ import (
 
 	"github.com/edgefarm/node-dns/pkg/dns/config"
 	mdns "github.com/miekg/dns"
+	"k8s.io/klog"
 
 	"github.com/edgefarm/node-dns/pkg/feed"
 )
@@ -50,9 +51,14 @@ func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 	otherNameservers = dns.otherNameservers()
 
 	// get dns listen ip
-	dns.ListenIP, err = getInterfaceIP(config.ListenInterface)
-	if err != nil {
-		return dns, fmt.Errorf("get dns listen ip for interface %s err: %v", config.ListenInterface, err)
+	if config.ListenInterface != "" {
+		dns.ListenIP, err = getInterfaceIP(config.ListenInterface)
+		if err != nil {
+			return dns, fmt.Errorf("get dns listen ip for interface %s err: %v", config.ListenInterface, err)
+		}
+	} else {
+		dns.ListenIP = nil
+		klog.Info("no listen interface provided. Proxy mode only.")
 	}
 
 	addr := fmt.Sprintf("%v:%v", dns.ListenIP, config.ListenPort)

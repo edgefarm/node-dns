@@ -145,63 +145,65 @@ func lookup(URI string) (ip net.IP, exist bool) {
 
 // ensureResolvForHost adds edgemesh dns server to the head of /etc/resolv.conf
 func (dns *EdgeDNS) ensureResolvForHost() {
-	bs, err := ioutil.ReadFile(dns.ResolvConf)
-	if err != nil {
-		klog.Errorf("read file %s err: %v", dns.ResolvConf, err)
-		return
+	if dns.ListenIP != nil {
+		bs, err := ioutil.ReadFile(dns.ResolvConf)
+		if err != nil {
+			klog.Errorf("read file %s err: %v", dns.ResolvConf, err)
+			return
 
-	}
+		}
 
-	resolv := strings.Split(string(bs), "\n")
-	if resolv == nil {
-		nameserver := "nameserver " + dns.ListenIP.String()
-		if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
-			klog.Errorf("write file %s err: %v", dns.ResolvConf, err)
-		}
-		return
-	}
-
-	configured := false
-	dnsIdx := 0
-	startIdx := 0
-	for idx, item := range resolv {
-		if strings.Contains(item, dns.ListenIP.String()) {
-			configured = true
-			dnsIdx = idx
-			break
-		}
-	}
-	for idx, item := range resolv {
-		if strings.Contains(item, "nameserver") {
-			startIdx = idx
-			break
-		}
-	}
-	if configured {
-		if dnsIdx != startIdx && dnsIdx > startIdx {
-			nameserver := sortNameserver(resolv, dnsIdx, startIdx)
+		resolv := strings.Split(string(bs), "\n")
+		if resolv == nil {
+			nameserver := "nameserver " + dns.ListenIP.String()
 			if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
-				klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
-				return
+				klog.Errorf("write file %s err: %v", dns.ResolvConf, err)
+			}
+			return
+		}
+
+		configured := false
+		dnsIdx := 0
+		startIdx := 0
+		for idx, item := range resolv {
+			if strings.Contains(item, dns.ListenIP.String()) {
+				configured = true
+				dnsIdx = idx
+				break
 			}
 		}
-		return
-	}
-
-	nameserver := ""
-	for idx := 0; idx < len(resolv); {
-		if idx == startIdx {
-			startIdx = -1
-			nameserver = nameserver + "nameserver " + dns.ListenIP.String() + "\n"
-			continue
+		for idx, item := range resolv {
+			if strings.Contains(item, "nameserver") {
+				startIdx = idx
+				break
+			}
 		}
-		nameserver = nameserver + resolv[idx] + "\n"
-		idx++
-	}
+		if configured {
+			if dnsIdx != startIdx && dnsIdx > startIdx {
+				nameserver := sortNameserver(resolv, dnsIdx, startIdx)
+				if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
+					klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
+					return
+				}
+			}
+			return
+		}
 
-	if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
-		klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
-		return
+		nameserver := ""
+		for idx := 0; idx < len(resolv); {
+			if idx == startIdx {
+				startIdx = -1
+				nameserver = nameserver + "nameserver " + dns.ListenIP.String() + "\n"
+				continue
+			}
+			nameserver = nameserver + resolv[idx] + "\n"
+			idx++
+		}
+
+		if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
+			klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
+			return
+		}
 	}
 }
 

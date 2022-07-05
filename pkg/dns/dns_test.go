@@ -43,6 +43,7 @@ func setupEdgeDNS(t *testing.T) (*EdgeDNS, string) {
 	}
 
 	config := config.NewDNSConfig()
+	config.ListenInterface = ""
 	config.ResolvConf = file.Name()
 
 	_, err = file.WriteString(predefinedResolvConf)
