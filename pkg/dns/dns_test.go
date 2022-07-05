@@ -18,14 +18,65 @@ package dns
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"os"
 	"testing"
 
+	"github.com/edgefarm/node-dns/pkg/dns/config"
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	predefinedResolvConf string = `
+search svc.cluster.local cluster.local
+nameserver 8.8.8.8
+nameserver 4.4.4.4
+`
+)
+
+func setupEdgeDNS(t *testing.T) (*EdgeDNS, string) {
+	assert := assert.New(t)
+	file, err := os.CreateTemp("", "resolvconf")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config := config.NewDNSConfig()
+	config.ResolvConf = file.Name()
+
+	_, err = file.WriteString(predefinedResolvConf)
+	assert.Nil(err)
+
+	e, err := NewEdgeDNS(config)
+	assert.Nil(err)
+	return e, file.Name()
+}
+
+func cleanupEdgeDNS(t *testing.T, file string) {
+	os.Remove(file)
+}
+
 func TestLookupUptreamHost(t *testing.T) {
 	assert := assert.New(t)
+	_, file := setupEdgeDNS(t)
+	defer cleanupEdgeDNS(t, file)
 	ips, err := lookupUpstreamHost(context.Background(), "example.com")
 	assert.Nil(err)
 	assert.NotEmpty(ips)
+
+	ips, err = lookupUpstreamHost(context.Background(), "foo-bar-this-is-never-found.com")
+	fmt.Println(err)
+	assert.NotNil(err)
+	assert.Empty(ips)
+}
+
+func TestGetOtherNameservers(t *testing.T) {
+	assert := assert.New(t)
+	e, file := setupEdgeDNS(t)
+	defer cleanupEdgeDNS(t, file)
+	others := e.otherNameservers()
+	assert.Contains(others, "8.8.8.8")
+	assert.Contains(others, "4.4.4.4")
+	assert.Equal(len(others), 2)
 }

@@ -28,14 +28,11 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const hostResolv = "/etc/resolv.conf"
-
-const (
-	customDNS = "8.8.8.8:53"
+var (
+	// DNSMap is a map of hostnames with their corresponding IP addresses
+	DNSMap           = map[string]string{}
+	otherNameservers = []string{}
 )
-
-// DNSMap is a map of hostnames with their corresponding IP addresses
-var DNSMap = map[string]string{}
 
 type handler struct{}
 
@@ -65,10 +62,10 @@ func (h *handler) ServeDNS(w mdns.ResponseWriter, r *mdns.Msg) {
 
 // Run starts the DNS server
 func (dns *EdgeDNS) Run() {
-	// ensure /etc/resolv.conf have dns nameserver
 	go func() {
 		if dns.UpdateResolvConf {
 			dns.ensureResolvForHost()
+			otherNameservers = dns.otherNameservers()
 		}
 		err := dns.Feed.Update()
 		if err != nil {
@@ -88,9 +85,13 @@ func (dns *EdgeDNS) Run() {
 					klog.Errorf("failed to update dns server, err: %v", err)
 				}
 				DNSMap = dns.Feed.GetDNSMap()
+				klog.Infof("Currently resolvable:")
+				for host, ip := range DNSMap {
+					klog.Infof("  %s -> %s", host, ip)
+				}
 				if dns.UpdateResolvConf {
-					fmt.Println(DNSMap)
 					dns.ensureResolvForHost()
+					otherNameservers = dns.otherNameservers()
 				}
 			case <-dns.Exit:
 				if dns.UpdateResolvConf {
@@ -144,17 +145,18 @@ func lookup(URI string) (ip net.IP, exist bool) {
 
 // ensureResolvForHost adds edgemesh dns server to the head of /etc/resolv.conf
 func (dns *EdgeDNS) ensureResolvForHost() {
-	bs, err := ioutil.ReadFile(hostResolv)
+	bs, err := ioutil.ReadFile(dns.ResolvConf)
 	if err != nil {
-		klog.Errorf("read file %s err: %v", hostResolv, err)
+		klog.Errorf("read file %s err: %v", dns.ResolvConf, err)
 		return
+
 	}
 
 	resolv := strings.Split(string(bs), "\n")
 	if resolv == nil {
 		nameserver := "nameserver " + dns.ListenIP.String()
-		if err := ioutil.WriteFile(hostResolv, []byte(nameserver), 0600); err != nil {
-			klog.Errorf("write file %s err: %v", hostResolv, err)
+		if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
+			klog.Errorf("write file %s err: %v", dns.ResolvConf, err)
 		}
 		return
 	}
@@ -178,8 +180,8 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 	if configured {
 		if dnsIdx != startIdx && dnsIdx > startIdx {
 			nameserver := sortNameserver(resolv, dnsIdx, startIdx)
-			if err := ioutil.WriteFile(hostResolv, []byte(nameserver), 0600); err != nil {
-				klog.Errorf("failed to write file %s, err: %v", hostResolv, err)
+			if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
+				klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
 				return
 			}
 		}
@@ -197,10 +199,37 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 		idx++
 	}
 
-	if err := ioutil.WriteFile(hostResolv, []byte(nameserver), 0600); err != nil {
-		klog.Errorf("failed to write file %s, err: %v", hostResolv, err)
+	if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
+		klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
 		return
 	}
+}
+
+// otherNameservers returns a list of other nameservers configured in /etc/resolv.conf other than ours
+func (dns *EdgeDNS) otherNameservers() []string {
+	bs, err := ioutil.ReadFile(dns.ResolvConf)
+	if err != nil {
+		klog.Errorf("failed to read file %s, err: %v", dns.ResolvConf, err)
+	}
+
+	resolv := strings.Split(string(bs), "\n")
+
+	nameservers := []string{}
+	for _, line := range resolv {
+		if strings.Contains(line, "nameserver") {
+			ip := strings.Split(line, "nameserver ")
+			nameservers = append(nameservers, ip[1])
+		}
+
+	}
+	others := []string{}
+	for _, ip := range nameservers {
+		if ip != dns.ListenIP.String() {
+			others = append(others, ip)
+		}
+
+	}
+	return others
 }
 
 // sortNameserver sorts the nameserver list
@@ -224,9 +253,9 @@ func sortNameserver(resolv []string, dnsIdx, startIdx int) string {
 
 // cleanResolvForHost delete edgemesh dns server from the head of /etc/resolv.conf
 func (dns *EdgeDNS) cleanResolvForHost() {
-	bs, err := ioutil.ReadFile(hostResolv)
+	bs, err := ioutil.ReadFile(dns.ResolvConf)
 	if err != nil {
-		klog.Warningf("read file %s err: %v", hostResolv, err)
+		klog.Warningf("read file %s err: %v", dns.ResolvConf, err)
 	}
 
 	resolv := strings.Split(string(bs), "\n")
@@ -240,20 +269,34 @@ func (dns *EdgeDNS) cleanResolvForHost() {
 		}
 		nameserver = nameserver + item + "\n"
 	}
-	if err := ioutil.WriteFile(hostResolv, []byte(nameserver), 0600); err != nil {
-		klog.Errorf("failed to write nameserver to file %s, err: %v", hostResolv, err)
+	if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
+		klog.Errorf("failed to write nameserver to file %s, err: %v", dns.ResolvConf, err)
 	}
 }
 
 func lookupUpstreamHost(ctx context.Context, URI string) ([]string, error) {
-	r := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{
-				Timeout: time.Millisecond * time.Duration(10000),
-			}
-			return d.DialContext(ctx, network, customDNS)
-		},
+	address := []string{}
+	var lastErr error = nil
+	for _, other := range otherNameservers {
+		r := &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: time.Millisecond * time.Duration(10000),
+				}
+				return d.DialContext(ctx, network, fmt.Sprintf("%s:53", other))
+			},
+		}
+		found, err := r.LookupHost(context.Background(), URI)
+		if err != nil {
+			klog.Infof("cannot resolve %s using %s, err: %v", URI, other, err)
+			lastErr = err
+			continue
+		}
+		if len(found) > 0 && err == nil {
+			address = found
+			break
+		}
 	}
-	return r.LookupHost(context.Background(), URI)
+	return address, lastErr
 }

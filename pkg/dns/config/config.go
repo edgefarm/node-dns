@@ -32,6 +32,8 @@ type DNSConfig struct {
 	UpdateResolvConf bool `json:"updateResolvConf"`
 	// Feed defines the feeds the DNS server gets its information from
 	Feed *feed.FeedConfig `json:"feed"`
+	// ResolvConf is the path to the resolv.conf file
+	ResolvConf string
 }
 
 // NewDNSConfig gets the default DNS configuration
@@ -40,6 +42,7 @@ func NewDNSConfig() *DNSConfig {
 		ListenInterface:  "docker0",
 		ListenPort:       53,
 		Feed:             feed.NewFeedConfig(),
-		UpdateResolvConf: false,
+		UpdateResolvConf: true,
+		ResolvConf:       "/etc/resolv.conf",
 	}
 }

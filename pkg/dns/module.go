@@ -33,6 +33,7 @@ type EdgeDNS struct {
 	Exit             chan interface{}
 	Feed             feed.If
 	UpdateResolvConf bool
+	ResolvConf       string
 }
 
 // NewEdgeDNS creates a new EdgeDNS instance
@@ -43,7 +44,10 @@ func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 		Exit:             make(chan interface{}),
 		Feed:             feed.NewK8sAPI(config.Feed),
 		UpdateResolvConf: config.UpdateResolvConf,
+		ResolvConf:       config.ResolvConf,
 	}
+
+	otherNameservers = dns.otherNameservers()
 
 	// get dns listen ip
 	dns.ListenIP, err = getInterfaceIP(config.ListenInterface)

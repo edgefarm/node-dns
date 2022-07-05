@@ -45,6 +45,7 @@ containers running on the host.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		klog.Infof("node-dns version: %s", version)
 		config := config.NewDNSConfig()
 		config.ListenInterface = viper.GetString("listeninterface")
 		config.ListenPort = viper.GetInt("listenport")
