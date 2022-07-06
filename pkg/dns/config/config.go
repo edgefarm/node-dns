@@ -34,15 +34,18 @@ type DNSConfig struct {
 	Feed *feed.FeedConfig `json:"feed"`
 	// ResolvConf is the path to the resolv.conf file
 	ResolvConf string `json:"resolvConf"`
+	// RemoveSearchDomains defines if the `search` fields in resolv.conf shall be removed
+	RemoveSearchDomains bool `json:"removeSearchDomains"`
 }
 
 // NewDNSConfig gets the default DNS configuration
 func NewDNSConfig() *DNSConfig {
 	return &DNSConfig{
-		ListenInterface:  "docker0",
-		ListenPort:       53,
-		Feed:             feed.NewFeedConfig(),
-		UpdateResolvConf: true,
-		ResolvConf:       "/etc/resolv.conf",
+		ListenInterface:     "docker0",
+		ListenPort:          53,
+		Feed:                feed.NewFeedConfig(),
+		UpdateResolvConf:    true,
+		ResolvConf:          "/etc/resolv.conf",
+		RemoveSearchDomains: true,
 	}
 }

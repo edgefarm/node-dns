@@ -143,17 +143,36 @@ func lookup(URI string) (ip net.IP, exist bool) {
 	return net.ParseIP(ipAddress), true
 }
 
+func (dns *EdgeDNS) removeSearchDomains(resolv []string) []string {
+	if dns.RemoveSearchDomains {
+		for i, line := range resolv {
+			if strings.Contains(line, "search") {
+				resolv = append(resolv[:i], resolv[i+1:]...)
+			}
+		}
+	}
+	return resolv
+}
+
+func readFile(file string) ([]string, error) {
+	bs, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("read file %s err: %v", file, err)
+	}
+
+	resolv := strings.Split(string(bs), "\n")
+	return resolv, nil
+}
+
 // ensureResolvForHost adds edgemesh dns server to the head of /etc/resolv.conf
 func (dns *EdgeDNS) ensureResolvForHost() {
 	if dns.ListenIP != nil {
-		bs, err := ioutil.ReadFile(dns.ResolvConf)
+		resolv, err := readFile(dns.ResolvConf)
 		if err != nil {
-			klog.Errorf("read file %s err: %v", dns.ResolvConf, err)
+			klog.Errorf("%v", err)
 			return
-
 		}
 
-		resolv := strings.Split(string(bs), "\n")
 		if resolv == nil {
 			nameserver := "nameserver " + dns.ListenIP.String()
 			if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
@@ -161,6 +180,8 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 			}
 			return
 		}
+
+		resolv = dns.removeSearchDomains(resolv)
 
 		configured := false
 		dnsIdx := 0

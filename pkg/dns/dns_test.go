@@ -58,6 +58,20 @@ func cleanupEdgeDNS(t *testing.T, file string) {
 	os.Remove(file)
 }
 
+func TestRemoveSearchDomains(t *testing.T) {
+	assert := assert.New(t)
+	e, file := setupEdgeDNS(t)
+	defer cleanupEdgeDNS(t, file)
+
+	resolv, err := readFile(file)
+	assert.Nil(err)
+	assert.Contains(resolv, "search svc.cluster.local cluster.local")
+	resolv = e.removeSearchDomains(resolv)
+	assert.NotContains(resolv, "search svc.cluster.local cluster.local")
+	assert.Contains(resolv, "nameserver 8.8.8.8")
+	assert.Contains(resolv, "nameserver 4.4.4.4")
+}
+
 func TestLookupUptreamHost(t *testing.T) {
 	assert := assert.New(t)
 	_, file := setupEdgeDNS(t)
@@ -66,7 +80,7 @@ func TestLookupUptreamHost(t *testing.T) {
 	assert.Nil(err)
 	assert.NotEmpty(ips)
 
-	ips, err = lookupUpstreamHost(context.Background(), "foo-bar-this-is-never-found.com")
+	ips, err = lookupUpstreamHost(context.Background(), "impossibledomain")
 	fmt.Println(err)
 	assert.NotNil(err)
 	assert.Empty(ips)

@@ -29,23 +29,25 @@ import (
 
 // EdgeDNS is a node-level dns resolver
 type EdgeDNS struct {
-	ListenIP         net.IP
-	Server           *mdns.Server
-	Exit             chan interface{}
-	Feed             feed.If
-	UpdateResolvConf bool
-	ResolvConf       string
+	ListenIP            net.IP
+	Server              *mdns.Server
+	Exit                chan interface{}
+	Feed                feed.If
+	UpdateResolvConf    bool
+	ResolvConf          string
+	RemoveSearchDomains bool
 }
 
 // NewEdgeDNS creates a new EdgeDNS instance
 func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 	dns = &EdgeDNS{
-		ListenIP:         []byte{},
-		Server:           &mdns.Server{},
-		Exit:             make(chan interface{}),
-		Feed:             feed.NewK8sAPI(config.Feed),
-		UpdateResolvConf: config.UpdateResolvConf,
-		ResolvConf:       config.ResolvConf,
+		ListenIP:            []byte{},
+		Server:              &mdns.Server{},
+		Exit:                make(chan interface{}),
+		Feed:                feed.NewK8sAPI(config.Feed),
+		UpdateResolvConf:    config.UpdateResolvConf,
+		ResolvConf:          config.ResolvConf,
+		RemoveSearchDomains: config.RemoveSearchDomains,
 	}
 
 	otherNameservers = dns.otherNameservers()
