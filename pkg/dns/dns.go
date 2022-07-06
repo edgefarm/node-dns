@@ -66,6 +66,10 @@ func (dns *EdgeDNS) Run() {
 		if dns.UpdateResolvConf {
 			dns.ensureResolvForHost()
 			otherNameservers = dns.otherNameservers()
+			err := dns.ensureRemovedSearchDomains()
+			if err != nil {
+				klog.Errorf("%v", err)
+			}
 		}
 		err := dns.Feed.Update()
 		if err != nil {
@@ -92,6 +96,10 @@ func (dns *EdgeDNS) Run() {
 				if dns.UpdateResolvConf {
 					dns.ensureResolvForHost()
 					otherNameservers = dns.otherNameservers()
+					err := dns.ensureRemovedSearchDomains()
+					if err != nil {
+						klog.Errorf("%v", err)
+					}
 				}
 			case <-dns.Exit:
 				if dns.UpdateResolvConf {
@@ -143,6 +151,19 @@ func lookup(URI string) (ip net.IP, exist bool) {
 	return net.ParseIP(ipAddress), true
 }
 
+func (dns *EdgeDNS) ensureRemovedSearchDomains() error {
+	resolv, err := readFile(dns.ResolvConf)
+	if err != nil {
+		return err
+	}
+	resolv = dns.removeSearchDomains(resolv)
+	str := strings.Join(resolv, "\n")
+	if err := writeFile(dns.ResolvConf, []byte(str)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (dns *EdgeDNS) removeSearchDomains(resolv []string) []string {
 	if dns.RemoveSearchDomains {
 		for i, line := range resolv {
@@ -164,6 +185,13 @@ func readFile(file string) ([]string, error) {
 	return resolv, nil
 }
 
+func writeFile(file string, content []byte) error {
+	if err := ioutil.WriteFile(file, content, 0600); err != nil {
+		return fmt.Errorf("failed to write file %s, err: %v", file, err)
+	}
+	return nil
+}
+
 // ensureResolvForHost adds edgemesh dns server to the head of /etc/resolv.conf
 func (dns *EdgeDNS) ensureResolvForHost() {
 	if dns.ListenIP != nil {
@@ -175,13 +203,11 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 
 		if resolv == nil {
 			nameserver := "nameserver " + dns.ListenIP.String()
-			if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
-				klog.Errorf("write file %s err: %v", dns.ResolvConf, err)
+			if err := writeFile(dns.ResolvConf, []byte(nameserver)); err != nil {
+				klog.Errorf("err: %v", err)
+				return
 			}
-			return
 		}
-
-		resolv = dns.removeSearchDomains(resolv)
 
 		configured := false
 		dnsIdx := 0
@@ -202,8 +228,8 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 		if configured {
 			if dnsIdx != startIdx && dnsIdx > startIdx {
 				nameserver := sortNameserver(resolv, dnsIdx, startIdx)
-				if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
-					klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
+				if err := writeFile(dns.ResolvConf, []byte(nameserver)); err != nil {
+					klog.Errorf("err: %v", err)
 					return
 				}
 			}
@@ -221,8 +247,8 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 			idx++
 		}
 
-		if err := ioutil.WriteFile(dns.ResolvConf, []byte(nameserver), 0600); err != nil {
-			klog.Errorf("failed to write file %s, err: %v", dns.ResolvConf, err)
+		if err := writeFile(dns.ResolvConf, []byte(nameserver)); err != nil {
+			klog.Errorf("err: %v", err)
 			return
 		}
 	}
