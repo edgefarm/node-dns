@@ -54,6 +54,7 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
+          file: ./build/Dockerfile
           push: true
           platforms: ${{ env.ARCHITECTURES }}
           tags: ${{ steps.meta.outputs.tags }}
