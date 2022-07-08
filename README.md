@@ -36,6 +36,8 @@ A valid configuration can look like this:
 ```yaml
 listeninterface: docker0
 listenport: 53
+resolvConf: /etc/resolv.conf
+removeSearchDomains: true
 feed:
   k8sapi:
     enabled: true
