@@ -94,8 +94,10 @@ func (dns *EdgeDNS) Run() {
 					klog.Infof("  %s -> %s", host, ip)
 				}
 				if dns.UpdateResolvConf {
+					klog.Infof("  Updating resolv")
 					dns.ensureResolvForHost()
 					otherNameservers = dns.otherNameservers()
+					klog.Infof("  othernameservers %v", otherNameservers)
 					err := dns.ensureRemovedSearchDomains()
 					if err != nil {
 						klog.Errorf("%v", err)
@@ -182,7 +184,16 @@ func readFile(file string) ([]string, error) {
 	}
 
 	resolv := strings.Split(string(bs), "\n")
-	return resolv, nil
+
+	// filter out comment lines
+	payload := []string{}
+	for _, line := range resolv {
+		if !strings.HasPrefix(line, "#") {
+			payload = append(payload, line)
+		}
+	}
+
+	return payload, nil
 }
 
 func writeFile(file string, content []byte) error {
@@ -200,7 +211,7 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 			klog.Errorf("%v", err)
 			return
 		}
-
+		klog.Infof("dns server read resolv %s: %v", dns.ResolvConf, resolv)
 		if resolv == nil {
 			nameserver := "nameserver " + dns.ListenIP.String()
 			if err := writeFile(dns.ResolvConf, []byte(nameserver)); err != nil {
@@ -228,11 +239,13 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 		if configured {
 			if dnsIdx != startIdx && dnsIdx > startIdx {
 				nameserver := sortNameserver(resolv, dnsIdx, startIdx)
+				klog.Infof("write configured resolv %s: %v", dns.ResolvConf, nameserver)
 				if err := writeFile(dns.ResolvConf, []byte(nameserver)); err != nil {
 					klog.Errorf("err: %v", err)
 					return
 				}
 			}
+			klog.Infof("ensureResolvForHost return wo writing")
 			return
 		}
 
@@ -247,6 +260,7 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 			idx++
 		}
 
+		klog.Infof("write non-configured resolv %s: %v", dns.ResolvConf, nameserver)
 		if err := writeFile(dns.ResolvConf, []byte(nameserver)); err != nil {
 			klog.Errorf("err: %v", err)
 			return
@@ -256,12 +270,10 @@ func (dns *EdgeDNS) ensureResolvForHost() {
 
 // otherNameservers returns a list of other nameservers configured in /etc/resolv.conf other than ours
 func (dns *EdgeDNS) otherNameservers() []string {
-	bs, err := ioutil.ReadFile(dns.ResolvConf)
+	resolv, err := readFile(dns.ResolvConf)
 	if err != nil {
 		klog.Errorf("failed to read file %s, err: %v", dns.ResolvConf, err)
 	}
-
-	resolv := strings.Split(string(bs), "\n")
 
 	nameservers := []string{}
 	for _, line := range resolv {
@@ -269,7 +281,6 @@ func (dns *EdgeDNS) otherNameservers() []string {
 			ip := strings.Split(line, "nameserver ")
 			nameservers = append(nameservers, ip[1])
 		}
-
 	}
 	others := []string{}
 	for _, ip := range nameservers {
@@ -302,15 +313,11 @@ func sortNameserver(resolv []string, dnsIdx, startIdx int) string {
 
 // cleanResolvForHost delete edgemesh dns server from the head of /etc/resolv.conf
 func (dns *EdgeDNS) cleanResolvForHost() {
-	bs, err := ioutil.ReadFile(dns.ResolvConf)
+	resolv, err := readFile(dns.ResolvConf)
 	if err != nil {
 		klog.Warningf("read file %s err: %v", dns.ResolvConf, err)
 	}
 
-	resolv := strings.Split(string(bs), "\n")
-	if resolv == nil {
-		return
-	}
 	nameserver := ""
 	for _, item := range resolv {
 		if strings.Contains(item, dns.ListenIP.String()) || item == "" {
