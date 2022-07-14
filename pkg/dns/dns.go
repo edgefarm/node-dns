@@ -63,6 +63,7 @@ func (h *handler) ServeDNS(w mdns.ResponseWriter, r *mdns.Msg) {
 // Run starts the DNS server
 func (dns *EdgeDNS) Run() {
 	go func() {
+		klog.Infof("other nameservers: %v %p updateresolvconf %v", otherNameservers, &otherNameservers, dns.UpdateResolvConf)
 		if dns.UpdateResolvConf {
 			dns.ensureResolvForHost()
 			otherNameservers = dns.otherNameservers()
@@ -93,11 +94,11 @@ func (dns *EdgeDNS) Run() {
 				for host, ip := range DNSMap {
 					klog.Infof("  %s -> %s", host, ip)
 				}
+				otherNameservers = dns.otherNameservers()
 				if dns.UpdateResolvConf {
 					klog.Infof("  Updating resolv")
 					dns.ensureResolvForHost()
 					otherNameservers = dns.otherNameservers()
-					klog.Infof("  othernameservers %v", otherNameservers)
 					err := dns.ensureRemovedSearchDomains()
 					if err != nil {
 						klog.Errorf("%v", err)
@@ -289,6 +290,7 @@ func (dns *EdgeDNS) otherNameservers() []string {
 		}
 
 	}
+	klog.Infof("read otherNameServers: my ip=%s others=%v", dns.ListenIP.String(), others)
 	return others
 }
 
@@ -337,13 +339,16 @@ func lookupUpstreamHost(ctx context.Context, URI string) ([]string, error) {
 		r := &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				otherHost := ctx.Value("otherHost")
+
 				d := net.Dialer{
 					Timeout: time.Millisecond * time.Duration(10000),
 				}
-				return d.DialContext(ctx, network, fmt.Sprintf("%s:53", other))
+				return d.DialContext(ctx, network, fmt.Sprintf("%s:53", otherHost))
 			},
 		}
-		found, err := r.LookupHost(context.Background(), URI)
+		ctx := context.WithValue(context.Background(), "otherHost", other)
+		found, err := r.LookupHost(ctx, URI)
 		if err != nil {
 			klog.Infof("cannot resolve %s using %s, err: %v", URI, other, err)
 			lastErr = err
