@@ -50,8 +50,6 @@ func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 		RemoveSearchDomains: config.RemoveSearchDomains,
 	}
 
-	otherNameservers = dns.otherNameservers()
-
 	// get dns listen ip
 	if config.ListenInterface != "" {
 		dns.ListenIP, err = getInterfaceIP(config.ListenInterface)
@@ -62,6 +60,7 @@ func NewEdgeDNS(config *config.DNSConfig) (dns *EdgeDNS, err error) {
 		dns.ListenIP = nil
 		klog.Info("no listen interface provided. Proxy mode only.")
 	}
+	otherNameservers = dns.otherNameservers()
 
 	addr := fmt.Sprintf("%v:%v", dns.ListenIP, config.ListenPort)
 	dns.Server = &mdns.Server{Addr: addr, Net: "udp"}
